@@ -26,19 +26,19 @@ export default class UsersController {
 
    async  store({request,response}:HttpContextContract) {
      const user = new User()
-     const ext_value = new ExtensionValue()
      const data = await request.validate(RegisterValidator)
      await user.merge({...data}).save()
+     
      await ExtensionValue.createMany([
-          {
-          value : request.input('value'),
+     {
+          value : request.input('adresse'),
           id_user : user.id,
-          id_extension : request.input('ext_id')
+          id_extension : request.input('1')
      },
      {
-          value : request.input('value'),
+          value : request.input('telephone'),
           id_user : user.id,
-          id_extension : request.input('ext_id')
+          id_extension : request.input('3')
      },
 ])
 
