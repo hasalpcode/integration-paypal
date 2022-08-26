@@ -20,6 +20,7 @@
 
 import Route from '@ioc:Adonis/Core/Route'
 
+
 Route.get('/', async () => {
   return { hello: 'world' }
 })
@@ -41,6 +42,12 @@ Route.group(()=>{
   Route.post('/ext_value/store', 'ExtensionsController.store')
   Route.get('/user_ext/:id', 'UsersController.user_ext')
   Route.get('/extensions', 'ExtensionsController.index') 
+  // paypal
+  Route.post('/order', 'PaypalsController.createOrder') 
+  Route.post('/getToken', 'PaypalsController.getToken') 
+ // Route.post('/approvate/:id', 'PaypalsController.approvateOrder') 
+  Route.post("/capture/:orderID",'PaypalsController.capturePayment' )
+
 }).prefix('/api')
   // extension_association
   

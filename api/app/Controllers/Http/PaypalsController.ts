@@ -1,44 +1,88 @@
 import type { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
+//app/Controllers/Http/PaypalController.js 
+import Env from '@ioc:Adonis/Core/Env'
 
 'use strict'
-const Config = require('Config')
-const Paypal = require('paypal-rest-sdk')
-// We configure the PayPal SDK with our configuration
-Paypal.configure(Config.get('paypal.configure'));
+
+const rp = require('request-promise')
+
+const client_id= Env.get('PAYPAL_CLIENT_ID');
+const client_secret= Env.get('PAYPAL_CLIENT_SECRET');
+const base = "https://api.sandbox.paypal.com";
 export default class PaypalsController {
+idOrder = ""
+ 
+  async  createOrder() {
+    const accessToken = await this.getToken();
+    const url = `${base}/v2/checkout/orders`;
+    const response = await rp(url, {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        intent: "CAPTURE",
+        purchase_units: [
+          {
+            amount: {
+              currency_code: "USD",
+              value: "100.00",
+            },
+          },
+        ],
+      }),
+    });
+   this.idOrder = JSON.parse(response).id 
+    
+  
+    return JSON.parse(response) ;
+  }
 
-    async getSuccessUrl() {
-        return Config.get('paypal.url_success')
-    }
+   
+  async getToken() {
+    const auth = Buffer.from(client_id + ":" + client_secret).toString('base64')
+    const result = await rp(`${base}/v1/oauth2/token`, {
+      method: "post",
+      body: "grant_type=client_credentials",
+      headers: {
+        Authorization: `Basic ${auth}`,
+      },
+    }).then((res)=>{
+      return res
+    })
+    
+  
+  return (JSON.parse(result).access_token)
+  }
 
-    async getErrorUrl() {
-        return Config.get('paypal.url_error')
-    }
+  // async approvateOrder({params}:HttpContextContract){
+  //   //const accessToken = await this.getToken();
+  //   const {orderId} = params.id
+  //   const url = `${base}/checkoutnow/?token=${orderId}`;
+  //   const response = await rp(url);
+  //  console.log(orderId)
+  
+  //   return response ;
+  // }
 
-    async createPay(payment) {
-        return new Promise((resolve,reject)=> {
-            Paypal.payment.create(payment,function (err,payment) {
-                if (err) {
-                    reject
-                }else{
-                    resolve(payment)
-                }
-            })
-        })
-    }
-
-    async getPay ( paymentId ) {
-        return new Promise( ( resolve, reject ) => {
-          Paypal.payment.get( paymentId, function( err, payment ) {
-            if ( err ) {
-              reject(err);
-            }
-            else {
-              resolve(payment);
-            }
-          });
-        });
-      }
-
-
+  async capturePayment( {params}:HttpContextContract) {
+    const orderId = params.orderID
+    const accessToken = await this.getToken();
+  const url = `${base}/v2/checkout/orders/${orderId}/capture`;
+  const response = await rp(url, {
+    method: "post",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  
+    return (JSON.parse(response));
+  }
+    
+   
 }
+
+
+
