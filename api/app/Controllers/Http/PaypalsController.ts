@@ -12,9 +12,11 @@ const base = "https://api.sandbox.paypal.com";
 export default class PaypalsController {
 idOrder = ""
  
-  async  createOrder() {
+  async  createOrder({request}:HttpContextContract) {
     const accessToken = await this.getToken();
     const url = `${base}/v2/checkout/orders`;
+    const currency = request.input('currency')
+    const getAmount = request.input('amount')
     const response = await rp(url, {
       method: "post",
       headers: {
@@ -26,18 +28,21 @@ idOrder = ""
         purchase_units: [
           {
             amount: {
-              currency_code: "USD",
-              value: "100.00",
+              currency_code: currency,
+              value:getAmount,
             },
           },
         ],
       }),
     });
-   this.idOrder = JSON.parse(response).id 
+    //this.idOrder = JSON.parse(response).id 
+   
+    //return (JSON.parse(response).id)
+    return JSON.parse(response);
     
-  
-    return JSON.parse(response) ;
   }
+
+  
 
    
   async getToken() {
