@@ -14,6 +14,9 @@ export default class AppProvider {
 
   public async ready () {
     // App is ready
+    if (this.app.environment === 'web') {
+      await import('../app/Controllers/Http/PaypalsController')
+    }
   }
 
   public async shutdown () {
